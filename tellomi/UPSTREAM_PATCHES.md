@@ -29,5 +29,6 @@
 | `.github/workflows/tellomi-dc-gate.yml` | 再跑配置自检，并把补丁套到上游 pin `fb0e62ba` 的临时副本上。不出包，不上传。 |
 
 | `tellomi/PROTOCOL.md` | 记录一次临时握手。脚本不入库，不进客户端构建，不发码。 |
+| `.github/workflows/tellomi-xcodebuild.yml`、`scripts/configure_frameworks.sh` | 只编译。主工程和 `configure_frameworks.sh` 里的 `xcodebuild` 都带 `CODE_SIGNING_ALLOWED=NO`，不上传产物。编译前生成被忽略的 FFI xcframework、`FlatSerialization/Sources`，初始化 Sparkle 的 `ed25519` 以及 `td`、`dav1d`、`libvpx` 嵌套子模块，并跑 `configure_frameworks.sh`，否则缺少 `td/e2e/e2e_api.h` 和 `base/RTCMacros.h`。OpenH264 的汇编步骤需要 `nasm`，按 `INSTALL.md` 在这台 runner 上先装 cmake、ninja、meson、nasm、yasm 和 autotools。`tg_owt` 的 `crc32c`、`abseil-cpp`、`libyuv`、`libsrtp` 是嵌套子模块，浅克隆不会带上，WebRTC 的 CMake 否则找不到 `crc32c_config.h.in`。 |
 
 没有改发现或 AI。没有登录或收发，所以还不能说聊天已经接通。公钥和 api hash 不写进说明文字。

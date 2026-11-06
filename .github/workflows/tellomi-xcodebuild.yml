@@ -1,0 +1,68 @@
+name: tellomi-xcodebuild
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compile:
+    runs-on: macos-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - name: Initialize submodules
+        run: |
+          git submodule update --init --depth 1
+          git -C submodules/Sparkle submodule update --init --depth 1 ed25519
+      - name: Prepare sources
+        run: |
+          python3 tellomi/apply_mtproto.py
+          python3 scripts/prepare-telegram-api.py
+          python3 scripts/prepare-flat-serialization.py
+      - name: Build local FFI frameworks
+        run: |
+          git -C submodules/telegram-ios submodule update --init --depth 1 \
+            third-party/wallet-engine/wallet-engine \
+            third-party/mtproto-engine
+          if ! command -v cargo >/dev/null 2>&1; then
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path --profile minimal
+            export PATH="$HOME/.cargo/bin:$PATH"
+          fi
+          sh core-xprojects/wallet-engine/wallet-engine/build.sh \
+            submodules/telegram-ios/third-party/wallet-engine/wallet-engine \
+            core-xprojects/wallet-engine/build \
+            packages/WalletEngine
+          sh core-xprojects/mtproto-engine/mtproto-engine/build.sh \
+            submodules/telegram-ios/third-party/mtproto-engine \
+            core-xprojects/mtproto-engine/build \
+            submodules/telegram-ios/submodules/MTProtoRustEngine
+      - name: Build native libraries
+        run: |
+          brew install cmake ninja meson nasm yasm autoconf libtool automake pkg-config
+          git -C submodules/telegram-ios submodule update --init --depth 1 \
+            third-party/td/td \
+            third-party/dav1d/dav1d \
+            third-party/libvpx/libvpx
+          git -C submodules/tg_owt submodule update --init --depth 1
+          ABSL_ATTR="submodules/tg_owt/src/third_party/abseil-cpp/absl/base/attributes.h"
+          if [ -f "$ABSL_ATTR" ]; then
+            /usr/bin/sed -i '' \
+              -e 's|^#define ABSL_ATTRIBUTE_LIFETIME_BOUND \[\[clang::lifetimebound\]\]|#define ABSL_ATTRIBUTE_LIFETIME_BOUND|' \
+              -e 's|^#define ABSL_ATTRIBUTE_LIFETIME_BOUND __attribute__((lifetimebound))|#define ABSL_ATTRIBUTE_LIFETIME_BOUND|' \
+              "$ABSL_ATTR"
+          fi
+          CMAKE_POLICY_VERSION_MINIMUM=3.5 sh scripts/configure_frameworks.sh
+      - name: Compile without signing
+        run: |
+          xcodebuild \
+            -workspace Telegram-Mac.xcworkspace \
+            -scheme Telegram \
+            -configuration Debug \
+            -destination 'generic/platform=macOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
