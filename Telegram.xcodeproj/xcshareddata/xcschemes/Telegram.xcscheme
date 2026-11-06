@@ -9,6 +9,22 @@
          <ExecutionAction
             ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
             <ActionContent
+               title = "Apply Tellomi MTProto Config"
+               scriptText = "/usr/bin/env python3 &quot;$SRCROOT/tellomi/apply_mtproto.py&quot;&#10;">
+               <EnvironmentBuildable>
+                  <BuildableReference
+                     BuildableIdentifier = "primary"
+                     BlueprintIdentifier = "D098C7141D7E175A007784E4"
+                     BuildableName = "Telegram.app"
+                     BlueprintName = "Telegram"
+                     ReferencedContainer = "container:Telegram.xcodeproj">
+                  </BuildableReference>
+               </EnvironmentBuildable>
+            </ActionContent>
+         </ExecutionAction>
+         <ExecutionAction
+            ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
+            <ActionContent
                title = "Prepare TelegramApi Sources"
                scriptText = "/usr/bin/env python3 &quot;$SRCROOT/scripts/prepare-telegram-api.py&quot;&#10;">
                <EnvironmentBuildable>

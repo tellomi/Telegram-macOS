@@ -1,4 +1,4 @@
-# dcId <ip> <port>
-# Point TELLOMI_DC_CONFIG at a file in this shape.
-# Point TELLOMI_SERVER_PUBLIC_KEY at the server RSA public key file.
-# Do not commit either file. This build still refuses to apply them.
+# The committed MTProto settings are tellomi/server/tellomi-server.json.
+# Seeds are IP literals, TCP 10443. The build copies that file into the
+# telegram-ios checkout with python3 tellomi/apply_mtproto.py.
+# Do not add a hostname to the seed list.

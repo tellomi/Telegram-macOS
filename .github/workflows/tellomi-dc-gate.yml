@@ -1,0 +1,23 @@
+name: tellomi-dc-gate
+
+on:
+  pull_request:
+  push:
+    branches:
+      - cursor/macos-dc-rsa-c2d8
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - name: Config self-test and migration guard
+        run: python3 tellomi/check_tellomi_guard.py
+      - name: Patch the pinned telegram-ios sources in a temporary copy
+        run: python3 tellomi/apply_mtproto.py --check-upstream

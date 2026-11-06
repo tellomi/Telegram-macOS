@@ -62,6 +62,10 @@ def validate_outputs(api):
 
 
 def prepare(root, check=False):
+    apply = [sys.executable, str(root / "tellomi/apply_mtproto.py")]
+    if check:
+        apply.append("--check")
+    subprocess.run(apply, check=True)
     api = root / "submodules/telegram-ios/submodules/TelegramApi"
     generator = root / "submodules/telegram-ios/build-system/SwiftTL"
     state = root / ".build/telegram-api-generation"
