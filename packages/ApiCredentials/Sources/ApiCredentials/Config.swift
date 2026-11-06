@@ -2,10 +2,18 @@ import Cocoa
 
 public final class ApiEnvironment {
     public static var apiId:Int32 {
+        #if TELLOMI_BUILD
+        fatalError("Tellomi: api_id is not configured. Refusing the upstream Telegram api id.")
+        #else
         return 9
+        #endif
     }
     public static var apiHash:String {
+        #if TELLOMI_BUILD
+        fatalError("Tellomi: api_hash is not configured. Refusing the upstream Telegram api hash.")
+        #else
         return "3975f648bb682ee889f35483bc618d1c"
+        #endif
     }
     
     public static var bundleId: String {

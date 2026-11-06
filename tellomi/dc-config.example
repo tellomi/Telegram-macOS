@@ -1,0 +1,4 @@
+# dcId <ip> <port>
+# Point TELLOMI_DC_CONFIG at a file in this shape.
+# Point TELLOMI_SERVER_PUBLIC_KEY at the server RSA public key file.
+# Do not commit either file. This build still refuses to apply them.
