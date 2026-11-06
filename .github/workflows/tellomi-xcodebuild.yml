@@ -1,0 +1,32 @@
+name: tellomi-xcodebuild
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compile:
+    runs-on: macos-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - name: Initialize submodules
+        run: git submodule update --init --depth 1
+      - name: Prepare sources
+        run: |
+          python3 tellomi/apply_mtproto.py
+          python3 scripts/prepare-telegram-api.py
+      - name: Compile without signing
+        run: |
+          xcodebuild \
+            -workspace Telegram-Mac.xcworkspace \
+            -scheme Telegram \
+            -configuration Debug \
+            -destination 'generic/platform=macOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
