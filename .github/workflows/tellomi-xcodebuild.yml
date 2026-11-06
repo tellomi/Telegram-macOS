@@ -46,6 +46,7 @@ jobs:
             third-party/td/td \
             third-party/dav1d/dav1d \
             third-party/libvpx/libvpx
+          git -C submodules/tg_owt submodule update --init --depth 1
           ABSL_ATTR="submodules/tg_owt/src/third_party/abseil-cpp/absl/base/attributes.h"
           if [ -f "$ABSL_ATTR" ]; then
             /usr/bin/sed -i '' \
