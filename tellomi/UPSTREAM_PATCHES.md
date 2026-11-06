@@ -12,5 +12,6 @@
 | `Telegram-Mac/updater/AppUpdateViewController.swift` | 空的更新地址直接失败，并拒绝 Telegram 的更新域名。 |
 | `Telegram-Mac/Info.plist` | 显示名改为 Tellomi。`SUFeedURL` 仍来自 xcconfig。 |
 | `configurations/*.xcconfig`、`Telegram-Mac/{Debug,Beta,Release}.xcconfig` | 更新地址和 AppCenter 配置清空。 |
+| `tellomi/check_tellomi_guard.py` | 独立仓库根不再是总仓。守卫从 `tellomi/` 的上一级找根，gitlink 路径不再带 `clients/macos` 前缀。 |
 
 没有改发现、AI、邮箱登录。没有写入 DC、api hash 或 RSA。

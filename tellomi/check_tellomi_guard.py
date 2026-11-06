@@ -7,8 +7,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[3]
-MAC = ROOT / "clients" / "macos"
+ROOT = Path(__file__).resolve().parents[1]
+MAC = ROOT
 TEL = MAC / "tellomi"
 UPSTREAM = "561169337e838c3281f7cfe24652757a5b522df9"
 IOS_PIN = "fb0e62ba8a147f0821da6aa63c09da7d79a10111"
@@ -97,19 +97,19 @@ def main() -> int:
         for banned in ("149.154.", "8.137.39.82", "3975f648bb682ee889f35483bc618d1c"):
             if banned in text:
                 problems.append(f"{path.relative_to(ROOT)} 含有不该写入的配置")
-    listed = subprocess.check_output(["git", "-C", str(ROOT), "ls-files", "-s", "clients/macos"], text=True)
+    listed = subprocess.check_output(["git", "-C", str(ROOT), "ls-files", "-s"], text=True)
     links = [line for line in listed.splitlines() if line.startswith("160000 ")]
     if len(links) != 11:
         problems.append(f"gitlink 数量是 {len(links)}，期望 11")
-    if not any(IOS_PIN in line and line.endswith("clients/macos/submodules/telegram-ios") for line in links):
+    if not any(IOS_PIN in line and line.endswith("submodules/telegram-ios") for line in links):
         problems.append("telegram-ios gitlink 不对")
-    if not any(LIBPRISMA in line and line.endswith("clients/macos/submodules/libprisma") for line in links):
+    if not any(LIBPRISMA in line and line.endswith("submodules/libprisma") for line in links):
         problems.append("libprisma gitlink 不是上游树里的那个提交")
     ios_files = subprocess.check_output(
-        ["git", "-C", str(ROOT), "ls-files", "clients/macos/submodules/telegram-ios"],
+        ["git", "-C", str(ROOT), "ls-files", "submodules/telegram-ios"],
         text=True,
     ).splitlines()
-    blobs = [line for line in ios_files if not line.endswith("clients/macos/submodules/telegram-ios")]
+    blobs = [line for line in ios_files if not line.endswith("submodules/telegram-ios")]
     if blobs:
         problems.append("telegram-ios 被整包放进来了")
     if "发现" not in scope or "邮箱" not in scope:
