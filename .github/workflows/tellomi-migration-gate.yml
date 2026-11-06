@@ -1,0 +1,22 @@
+name: tellomi-migration-gate
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - cursor/desktop-migrate-499c
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - name: Guard, import tree, credential scan, unresolved monorepo proof
+        run: python3 tellomi/check_tellomi_guard.py
