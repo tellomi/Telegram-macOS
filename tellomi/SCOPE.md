@@ -10,7 +10,7 @@
 
 这不是已经接上的聊天连接。登录验收还没做。
 
-DC 和 RSA 写在 `tellomi/server/tellomi-server.json`。种子是 `8.137.39.82:10443`，DC 1 和 DC 2 相同。构建前 `tellomi/apply_mtproto.py` 把它写进钉住的 `telegram-ios`：替换 Telegram 种子、关掉备用发现、握手只用 Tellomi 的公钥。`api_id` / `api_hash` 与 iOS 客户端一致。没有 Mac，没有跑过登录或收发，所以不能说已经接通。
+DC 和 RSA 写在 `tellomi/server/tellomi-server.json`。`8.137.39.82:10443` 是现有服务器的生产 MTProto TCP 端口，不是预发。DC 1 和 DC 2 都是这个地址。`seeds.testing` 只是 MTProto 的 testingEnvironment 列表，现在也指向这个生产端口。预发端口据说是 `11443`，还没有改连，这项待确认。构建前 `tellomi/apply_mtproto.py` 会拒绝主机名、空公钥、缺种子，以及把端口改成 `11443`。通过之后才写进钉住的 `telegram-ios`：替换 Telegram 种子、关掉备用发现、握手只用 Tellomi 的公钥。配置异常时脚本失败，共享 scheme 的构建停住。子模块若没套上补丁，上游种子还在；那不是一条已接通的连接。`api_id` / `api_hash` 与 iOS 客户端一致。没有 Mac，没有跑过登录或收发，所以不能说已经接通。
 
 跳过构建前的脚本时，子模块仍是上游种子。三个共享 scheme 和 `scripts/prepare-telegram-api.py` 都会先跑这个脚本；子模块没初始化时脚本失败，构建停住。
 

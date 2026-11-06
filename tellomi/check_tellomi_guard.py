@@ -112,7 +112,9 @@ def main() -> int:
             if banned in text:
                 problems.append(f"{relative} 含有不该写入的配置")
         if "8.137.39.82" in text and relative not in allowed_dev_address:
-            problems.append(f"{relative} 把 dev 地址写进了配置以外的文件")
+            problems.append(f"{relative} 把生产地址写进了配置以外的文件")
+        if "Chengdu dev" in text or "成都 dev" in text:
+            problems.append(f"{relative} 把生产端口写成了 dev")
     listed = subprocess.check_output(["git", "-C", str(ROOT), "ls-files", "-s"], text=True)
     links = [line for line in listed.splitlines() if line.startswith("160000 ")]
     if len(links) != 11:

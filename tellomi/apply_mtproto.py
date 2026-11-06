@@ -23,8 +23,10 @@ HEADER_PATH = ROOT / "tellomi" / "mtproto" / "TellomiServerConfigJSON.h"
 OVERLAY = ROOT / "tellomi" / "mtproto"
 IOS_PIN = "fb0e62ba8a147f0821da6aa63c09da7d79a10111"
 UPSTREAM_BASE = f"https://raw.githubusercontent.com/TelegramMessenger/Telegram-iOS/{IOS_PIN}"
-DEV_HOST = "8.137.39.82"
-SEED_PORT = 10443
+PRODUCTION_HOST = "8.137.39.82"
+PRODUCTION_PORT = 10443
+# 11443 is the stated staging port. It is not a seed until that switch is confirmed.
+STAGING_PORT_UNCONFIRMED = 11443
 
 DEFAULT_PUBLIC_KEYS = """\
 static NSArray<MTDatacenterAuthPublicKey *> *defaultPublicKeys(bool isProduction) {
@@ -179,16 +181,18 @@ def fingerprints(pem: str) -> tuple[int, int]:
 
 def validate_config(obj: dict) -> list[str]:
     problems = []
-    if obj.get("seed_port") != SEED_PORT:
-        problems.append("seed_port is not 10443")
+    if obj.get("seed_port") != PRODUCTION_PORT:
+        problems.append("seed_port is not the production MTProto port 10443")
+    if obj.get("seed_port") == STAGING_PORT_UNCONFIRMED:
+        problems.append("staging port 11443 is not confirmed and must not be dialed")
     if obj.get("disable_telegram_backup_discovery") is not True:
         problems.append("Telegram backup discovery is not disabled")
     for environment in ("production", "testing"):
         seeds = obj.get("seeds", {}).get(environment, {})
         for datacenter in ("1", "2"):
             hosts = seeds.get(datacenter)
-            if hosts != [DEV_HOST]:
-                problems.append(f"{environment} dc {datacenter} is not the dev IP literal")
+            if hosts != [PRODUCTION_HOST]:
+                problems.append(f"{environment} dc {datacenter} is not the production IP literal")
         for hosts in seeds.values():
             for host in hosts:
                 if any(ch.isalpha() for ch in host):
@@ -340,7 +344,33 @@ def copy_overlay(ios_root: pathlib.Path) -> None:
         shutil.copy2(source, destination)
 
 
+def refusal_gaps(obj: dict) -> list[str]:
+    """Abnormal configs must be rejected. These samples are not written and are not dialed."""
+    gaps = []
+    samples = []
+    hostname = json.loads(json.dumps(obj))
+    hostname["seeds"]["production"]["1"] = ["api.tellomi.cn"]
+    samples.append(("hostname", hostname))
+    staging = json.loads(json.dumps(obj))
+    staging["seed_port"] = STAGING_PORT_UNCONFIRMED
+    samples.append(("staging-port", staging))
+    empty_keys = json.loads(json.dumps(obj))
+    empty_keys["public_keys"]["production"] = []
+    empty_keys["public_keys"]["testing"] = []
+    samples.append(("empty-rsa", empty_keys))
+    missing_seed = json.loads(json.dumps(obj))
+    missing_seed["seeds"] = {"production": {}, "testing": {}}
+    samples.append(("missing-seed", missing_seed))
+    for name, sample in samples:
+        if not validate_config(sample):
+            gaps.append(f"abnormal config {name} was accepted")
+    return gaps
+
+
 def patch_tree(ios_root: pathlib.Path) -> None:
+    problems = validate_config(load_config())
+    if problems:
+        raise RuntimeError("refusing to apply abnormal MTProto config: " + "; ".join(problems))
     generate()
     required = [
         ios_root / "submodules/TelegramCore/Sources/Network/Network.swift",
@@ -409,8 +439,11 @@ def self_test() -> int:
     if HEADER_PATH.read_text(encoding="utf-8") != header_text(JSON_PATH.read_text(encoding="utf-8")):
         problems.append("generated header does not match the JSON")
     embedded = HEADER_PATH.read_text(encoding="utf-8")
-    if DEV_HOST not in embedded or ("149." + "154.") in embedded:
-        problems.append("generated header does not contain only the dev seed")
+    if PRODUCTION_HOST not in embedded or ("149." + "154.") in embedded:
+        problems.append("generated header does not contain the production seed")
+    if obj.get("seed_port") == STAGING_PORT_UNCONFIRMED:
+        problems.append("configured seed port is the unconfirmed staging port")
+    problems.extend(refusal_gaps(obj))
     if problems:
         print("\n".join(problems), file=sys.stderr)
         return 1

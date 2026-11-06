@@ -1,4 +1,6 @@
 # The committed MTProto settings are tellomi/server/tellomi-server.json.
-# Seeds are IP literals, TCP 10443. The build copies that file into the
-# telegram-ios checkout with python3 tellomi/apply_mtproto.py.
-# Do not add a hostname to the seed list.
+# 8.137.39.82:10443 is the production MTProto TCP port, not staging.
+# Staging is stated as port 11443 and is not configured. Switching is unconfirmed.
+# The build copies the JSON into telegram-ios only after tellomi/apply_mtproto.py
+# accepts it. A hostname, an empty RSA key, a missing seed, or port 11443 is refused.
+
