@@ -107,6 +107,7 @@ def main() -> int:
             "tellomi/UPSTREAM.md",
             "tellomi/SCOPE.md",
             "tellomi/dc-config.example",
+            "tellomi/PROTOCOL.md",
         }
         for banned in ("149.154.", "3975f648bb682ee889f35483bc618d1c"):
             if banned in text:

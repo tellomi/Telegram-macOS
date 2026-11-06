@@ -28,4 +28,6 @@
 | `Telegram-Mac/app/AppDelegate.swift`、`TelegramShare/ShareViewController.swift`、`Telegram.xcodeproj/project.pbxproj` | 去掉连网前的 fatalError stub。没有这个 stub 之后，构建前套用的 DC 和 RSA 才会进到初始化。 |
 | `.github/workflows/tellomi-dc-gate.yml` | 再跑配置自检，并把补丁套到上游 pin `fb0e62ba` 的临时副本上。不出包，不上传。 |
 
-没有改发现、AI 或邮箱登录。没有登录或收发测试，所以还不能说聊天已经接通。公钥和 api hash 不写进说明文字。
+| `tellomi/PROTOCOL.md` | 记录一次临时握手。脚本不入库，不进客户端构建，不发码。 |
+
+没有改发现或 AI。没有登录或收发，所以还不能说聊天已经接通。公钥和 api hash 不写进说明文字。
