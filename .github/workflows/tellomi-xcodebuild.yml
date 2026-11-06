@@ -19,6 +19,7 @@ jobs:
         run: |
           python3 tellomi/apply_mtproto.py
           python3 scripts/prepare-telegram-api.py
+          python3 scripts/prepare-flat-serialization.py
       - name: Build local FFI frameworks
         run: |
           git -C submodules/telegram-ios submodule update --init --depth 1 \
