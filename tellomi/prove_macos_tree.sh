@@ -23,10 +23,19 @@ fi
 
 if [ -z "${TELLOMI_MONOREPO:-}" ]; then
     echo "TELLOMI_MONOREPO is unset."
-    echo "github.com/tellomi/tellomi is not readable by the Telegram-macOS installation token (repository not found)."
-    echo "verified-b5651a40 still points at $IMPORT and still means the b5651a40 subtree-split claim."
-    echo "verified-59f5c580 was not created."
-    echo "Re-run with a local clone: TELLOMI_MONOREPO=/path/to/tellomi $0"
+    echo "github.com/tellomi/tellomi is not readable from this checkout (repository not found)."
+    echo "The import tree above was computed in this repository. 59f5c580:clients/macos and b5651a40:clients/macos were not computed."
+    if git -C "$ROOT" rev-parse -q --verify refs/tags/verified-b5651a40 >/dev/null; then
+        echo "verified-b5651a40 points at $(git -C "$ROOT" rev-parse "verified-b5651a40^{}") and still means the b5651a40 subtree-split claim."
+    else
+        echo "verified-b5651a40 is not in this clone."
+    fi
+    if git -C "$ROOT" rev-parse -q --verify refs/tags/verified-59f5c580 >/dev/null; then
+        echo "tag verified-59f5c580 points at $(git -C "$ROOT" rev-parse "verified-59f5c580^{}"). Its message is not a computation of the monorepo trees."
+    else
+        echo "tag verified-59f5c580 is not in this clone."
+    fi
+    echo "Exit 2 is not a match. Re-run with a local clone: TELLOMI_MONOREPO=/path/to/tellomi $0"
     exit 2
 fi
 

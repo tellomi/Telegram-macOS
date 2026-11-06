@@ -3,6 +3,7 @@
 """结构检查：macOS 守卫还在，telegram-ios 没有被整包复制进来。不编译客户端。"""
 from __future__ import annotations
 
+import os
 import re
 import subprocess
 import sys
@@ -94,6 +95,8 @@ def main() -> int:
     for path in TEL.rglob("*"):
         if not path.is_file() or path.name == "check_tellomi_guard.py":
             continue
+        if "__pycache__" in path.parts or path.suffix == ".pyc":
+            continue
         text = path.read_text(encoding="utf-8")
         for banned in ("149.154.", "8.137.39.82", "3975f648bb682ee889f35483bc618d1c"):
             if banned in text:
@@ -115,6 +118,50 @@ def main() -> int:
         problems.append("telegram-ios 被整包放进来了")
     if "发现" not in scope or "邮箱" not in scope:
         problems.append("SCOPE.md 没有写发现和邮箱")
+    if (ROOT / ".gitlab-ci.yml").exists():
+        problems.append("仓库根还有 .gitlab-ci.yml")
+    import_commit = "e8b916851de51980cef3e9236ab65d78c5feffb7"
+    recorded_tree = "e7b3b1a8a014783ac8f501055ee75c5ed9f8670a"
+    import_tree = subprocess.check_output(
+        ["git", "-C", str(ROOT), "rev-parse", f"{import_commit}^{{tree}}"],
+        text=True,
+    ).strip()
+    if import_tree != recorded_tree:
+        problems.append(f"导入 tip 的树是 {import_tree}，记录的是 {recorded_tree}")
+    # 片段拼起来再扫，避免门禁源码自己被整段凭证搜索命中。
+    credential_needles = [
+        "AIza" + "Sy",
+        "a3406de8" + "d171bb422bb6ddf3bbd800e2",
+        "945" + "75",
+        "29663110" + "5913",
+    ]
+    credential_grep = subprocess.run(
+        ["git", "-C", str(ROOT), "grep", "-I", "-n", *[arg for needle in credential_needles for arg in ("-e", needle)]],
+        capture_output=True,
+        text=True,
+    )
+    if credential_grep.returncode == 0:
+        problems.append("tip 上还有上游凭证片段")
+    elif credential_grep.returncode != 1:
+        problems.append("凭证扫描没有正常结束")
+    if not os.environ.get("TELLOMI_MONOREPO"):
+        proved = subprocess.run(
+            [str(TEL / "prove_macos_tree.sh")],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+        )
+        if proved.returncode != 2:
+            problems.append(f"没有总仓时 prove_macos_tree.sh 退出码是 {proved.returncode}，必须是 2")
+        if "MATCH" in proved.stdout:
+            problems.append("没有总仓时证明脚本报了 MATCH")
+        if recorded_tree not in proved.stdout:
+            problems.append("证明脚本没有打印已记录的导入树")
+        if "was not created" in proved.stdout:
+            problems.append("证明脚本仍把 verified-59f5c580 说成没有创建")
+        sys.stdout.write(proved.stdout)
+        if proved.stderr:
+            sys.stderr.write(proved.stderr)
 
     def plist_string(text: str, key: str) -> str | None:
         marker = f"<key>{key}</key>"

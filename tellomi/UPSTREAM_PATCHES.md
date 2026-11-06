@@ -20,6 +20,7 @@
 | `tools/networklab/tdlib_lab.py` | `api_id` / `api_hash` 只从 `TDLIB_API_ID`、`TDLIB_API_HASH` 或未跟踪的 `tools/networklab/tdlib_lab.local.json` 读取。仓库内没有可用默认值。 |
 | `tools/networklab/tdlib_lab.local.json.example`、`.gitignore` | 示例只有空字段。真正的本地文件被忽略，不入库。 |
 | `tellomi/check_tellomi_guard.py` | 拒绝 plist 里的上游 Firebase 标识和非空密钥字段，以及 lab 脚本里的非空默认凭证。 |
-| `tellomi/ALIGNMENT.md`、`tellomi/prove_macos_tree.sh` | 记下相对总仓 `clients/macos` @ `59f5c5801885a90ad5ef7f180fd99ca786a80bc1` 的核对方法。本环境读不到 `tellomi/tellomi`，所以没有新建 `verified-59f5c580`。已推送的 `verified-b5651a40` 没有改写。 |
+| `tellomi/ALIGNMENT.md`、`tellomi/prove_macos_tree.sh` | 记下相对总仓 `clients/macos` @ `59f5c5801885a90ad5ef7f180fd99ca786a80bc1` 的核对方法。本环境读不到 `tellomi/tellomi`，所以没有用总仓对象算出 `59f5c580:clients/macos` 或 `b5651a40:clients/macos`。后来出现的附注标签 `verified-59f5c580` 没有被当成这个计算结果，也没有 force 改写。 |
+| `tellomi/check_tellomi_guard.py`、`.github/workflows/tellomi-migration-gate.yml` | 迁移收口的测试门禁：守卫、导入树 OID、tip 上的凭证扫描，以及没有总仓时证明脚本必须退出 2。不构建安装包，不上传，不部署。 |
 
 没有改发现、AI、邮箱登录。没有写入 DC、api hash 或 RSA。
