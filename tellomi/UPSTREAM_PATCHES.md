@@ -13,5 +13,6 @@
 | `Telegram-Mac/Info.plist` | 显示名改为 Tellomi。`SUFeedURL` 仍来自 xcconfig。 |
 | `configurations/*.xcconfig`、`Telegram-Mac/{Debug,Beta,Release}.xcconfig` | 更新地址和 AppCenter 配置清空。 |
 | `tellomi/check_tellomi_guard.py` | 独立仓库根不再是总仓。守卫从 `tellomi/` 的上一级找根，gitlink 路径不再带 `clients/macos` 前缀。 |
+| `tellomi/UPSTREAM.md`、`tellomi/NOTICE.md` | 路径改成独立仓库根，不再写 `clients/macos/`。 |
 
 没有改发现、AI、邮箱登录。没有写入 DC、api hash 或 RSA。
