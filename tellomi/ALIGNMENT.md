@@ -41,6 +41,12 @@ git cat-file -t b5651a4054c5a804e79ee4421afb59f6fd3626ca
 
 `tellomi/prove_macos_tree.sh` 在没有 `TELLOMI_MONOREPO` 时退出码是 2。这不是匹配。标签在场也不改变这个退出码。
 
+## 所有者口头复核
+
+所有者于 2026-11-06 说明，已经在总仓核对过：`main`、`59f5c580`、`b5651a40` 的 `clients/macos` 都是 `e7b3b1a8a014783ac8f501055ee75c5ed9f8670a`。这和本仓算出的导入根树相同。
+
+本环境还是读不到 `tellomi/tellomi`，没有自己执行 `git rev-parse <commit>:clients/macos`。上面这句话因此只记录所有者的复核，不改变证明脚本的退出码。没有移动标签。
+
 ## 有总仓克隆时怎么核对
 
 在能读到 `tellomi/tellomi` 的机器上，不要设置 `TELLOMI_BASE` 或 `TELLOMI_LATER`：

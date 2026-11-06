@@ -35,7 +35,8 @@ if [ -z "${TELLOMI_MONOREPO:-}" ]; then
     else
         echo "tag verified-59f5c580 is not in this clone."
     fi
-    echo "Exit 2 is not a match. Re-run with a local clone: TELLOMI_MONOREPO=/path/to/tellomi $0"
+    echo "Exit 2 is not a match. An owner statement is not a computation of these trees."
+    echo "Re-run with a local clone: TELLOMI_MONOREPO=/path/to/tellomi $0"
     exit 2
 fi
 
