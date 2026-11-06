@@ -16,5 +16,6 @@
 | `tellomi/UPSTREAM.md`、`tellomi/NOTICE.md` | 路径改成独立仓库根，不再写 `clients/macos/`。 |
 
 | `tellomi/upstream-ci-disabled/gitlab-ci.yml` | 上游 GitLab CI 移出仓库根，避免自动部署。文件保留。 |
+| `README.md` | 用带来源说明的仓库 README 替换 GitHub 初始化的两行 README。上游正文留在下面。这是必要的文档替换，不是 force 覆盖 main。 |
 
 没有改发现、AI、邮箱登录。没有写入 DC、api hash 或 RSA。

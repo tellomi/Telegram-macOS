@@ -1,3 +1,9 @@
+# Tellomi macOS
+
+这是 Tellomi 的原生 macOS 源码仓库，不是 Telegram 官方仓库。源码来自 Telegram for macOS `561169337e838c3281f7cfe24652757a5b522df9`，维护说明在 [`tellomi/UPSTREAM.md`](tellomi/UPSTREAM.md)。还没有原生编译，没有接上聊天，没有发布。GitHub 初始化时的两行 README 已被这份文件替换。
+
+---
+
 <div align="center">
   <img src="Telegram-Mac/Assets.xcassets/AppIcon.appiconset/Logo_1024.png"
       width="125" 
