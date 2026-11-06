@@ -28,21 +28,68 @@ def main() -> int:
         problems.append("UPSTREAM.md 没有钉死 macOS 或 telegram-ios 提交")
     if "232" not in upstream:
         problems.append("UPSTREAM.md 没有写 layer 232")
-    if "refuseTelegramDefaults" not in app or "refuseTelegramDefaults" not in share:
-        problems.append("主程序或分享扩展没有在连网前调用守卫")
+    def call_is_unconditional(source: str, label: str) -> None:
+        before = source.split("NetworkInitializationArguments(", 1)[0]
+        if "TellomiConnection.refuseTelegramDefaults()" not in before:
+            problems.append(f"{label} 在连网前没有调用守卫")
+        window = before[-180:]
+        if "#if TELLOMI_BUILD" in window:
+            problems.append(f"{label} 的守卫仍包在 TELLOMI_BUILD 里，缺宏时会绕过")
+    call_is_unconditional(app, "主程序")
+    call_is_unconditional(share, "分享扩展")
     if "TELLOMI_DC_CONFIG" not in guard or "TELLOMI_SERVER_PUBLIC_KEY" not in guard:
         problems.append("守卫没有同时要求地址和公钥")
     if "MTProto wiring is not implemented" not in guard:
         problems.append("守卫没有写明 MTProto 尚未接入")
     if LIBPRISMA not in upstream or LIBPRISMA_NOT in upstream:
         problems.append("UPSTREAM.md 里的 libprisma SHA 不对")
-    if "TELLOMI_BUILD" not in config:
-        problems.append("api 凭证没有 Tellomi 分支")
-    stable = (MAC / "configurations/Stable.xcconfig").read_text(encoding="utf-8")
-    if "osx.telegram.org" in stable or "APPCENTER_SECRET =" not in stable:
-        problems.append("Stable.xcconfig 仍指向 Telegram 更新")
-    if "-DTELLOMI_BUILD" not in stable:
-        problems.append("Stable.xcconfig 没有定义 TELLOMI_BUILD")
+    if "TELLOMI_BUILD" in config or "return 9" in config or "3975f648bb682ee889f35483bc618d1c" in config:
+        problems.append("ApiCredentials 仍依赖主目标宏或仍保留上游凭证")
+    if 'return "app.tellomi.macos"' not in config:
+        problems.append("ApiCredentials 的 bundle id 仍是上游")
+    project = (MAC / "Telegram.xcodeproj/project.pbxproj").read_text(encoding="utf-8")
+    if 'OTHER_SWIFT_FLAGS[arch=*]' in project:
+        problems.append("分享扩展仍有 arch 覆盖，会清掉继承的编译条件")
+    if "ru.keepcoder.Telegram" in project:
+        problems.append("主工程 bundle id 仍是上游")
+    if "app.tellomi.macos" not in project:
+        problems.append("主工程没有 Tellomi bundle id")
+    feed = (MAC / "Telegram-Mac/updater/AppUpdateViewController.swift").read_text(encoding="utf-8")
+    feed_fn = feed.split("private var updateFeedURL: URL {", 1)[1].split("private func makeUpdateDriver", 1)[0]
+    if "fatalError" not in feed_fn or "does not fall back" not in feed_fn:
+        problems.append("空的更新地址没有明确失败")
+    if "osx.telegram.org" not in feed_fn:
+        problems.append("更新地址守卫没有拒绝 Telegram 更新域")
+    configs = [
+        "configurations/Release.xcconfig" if (MAC / "configurations/Release.xcconfig").exists() else "Telegram-Mac/Release.xcconfig",
+        "Telegram-Mac/Release.xcconfig",
+        "Telegram-Mac/Debug.xcconfig",
+        "Telegram-Mac/Beta.xcconfig",
+        "configurations/Stable.xcconfig",
+        "configurations/Beta.xcconfig",
+        "configurations/Alpha.xcconfig",
+        "configurations/AppStore.xcconfig",
+    ]
+    for rel in configs:
+        text = (MAC / rel).read_text(encoding="utf-8")
+        if "telegram.org" in text or "appcenter.ms" in text:
+            problems.append(f"{rel} 仍有 Telegram 更新地址")
+        if "SFEED_URL" in text and "SFEED_URL =" not in text:
+            problems.append(f"{rel} 没有清空 SFEED_URL")
+    def guarded_call_is_weak(source: str) -> bool:
+        before = source.split("NetworkInitializationArguments(", 1)[0]
+        return (
+            "TellomiConnection.refuseTelegramDefaults()" not in before
+            or "#if TELLOMI_BUILD" in before[-180:]
+        )
+    bad = "\n#if TELLOMI_BUILD\nTellomiConnection.refuseTelegramDefaults()\n#endif\nNetworkInitializationArguments("
+    if not guarded_call_is_weak(bad):
+        problems.append("负向检查没能发现被宏包住的守卫")
+    restored = (MAC / "Telegram-Mac/Release.xcconfig").read_text(encoding="utf-8") + "\nSFEED_URL = https://osx.telegram.org/updates/versions.xml\n"
+    if "osx.telegram.org" not in restored:
+        problems.append("负向样例没有上游更新地址")
+    if "osx.telegram.org" in (MAC / "Telegram-Mac/Release.xcconfig").read_text(encoding="utf-8"):
+        problems.append("Release.xcconfig 被负向样例改写了")
     for path in TEL.rglob("*"):
         if not path.is_file() or path.name == "check_tellomi_guard.py":
             continue

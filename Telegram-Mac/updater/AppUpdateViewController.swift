@@ -657,7 +657,18 @@ enum UpdaterSource : Equatable {
 
 
 private var updateFeedURL: URL {
-    return URL(string: Bundle.main.infoDictionary!["SUFeedURL"] as! String)!
+    let raw = (Bundle.main.infoDictionary?["SUFeedURL"] as? String) ?? ""
+    guard let url = URL(string: raw), !raw.isEmpty, let host = url.host, !host.isEmpty else {
+        fatalError("Tellomi: the update feed is empty. This build does not fall back to a Telegram update server.")
+    }
+    let normalized = host.lowercased()
+    if normalized == "osx.telegram.org"
+        || normalized == "mac-updates.telegram.org"
+        || normalized == "api.appcenter.ms"
+        || normalized.hasSuffix(".telegram.org") {
+        fatalError("Tellomi: refusing a Telegram update feed.")
+    }
+    return url
 }
 
 private func makeUpdateDriver(_ source: UpdaterSource) -> ExternalUpdateDriver {

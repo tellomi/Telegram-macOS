@@ -817,9 +817,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 
                 let systemDeviceModel = deviceModelPretty()
                 ApiEnvironment.systemDeviceModel = systemDeviceModel
-                #if TELLOMI_BUILD
                 TellomiConnection.refuseTelegramDefaults()
-                #endif
                 let networkArguments = NetworkInitializationArguments(apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, languagesCategory: ApiEnvironment.language, appVersion: ApiEnvironment.version, voipMaxLayer: OngoingCallContext.maxLayer, voipVersions: voipVersions, appData: appData, externalRequestVerificationStream: .single([:]), externalRecaptchaRequestVerification: { _, _ in return .complete() }, autolockDeadine: .single(nil), encryptionProvider: OpenSSLEncryptionProvider(), deviceModelName: ApiEnvironment.customDeviceModel ?? systemDeviceModel, useBetaFeatures: useBetaFeatures, isICloudEnabled: false, networkEngineFactory: RustNetworkEngineFactory())
                 
                 let sharedContext = SharedAccountContext(accountManager: accountManager, networkArguments: networkArguments, rootPath: rootPath, encryptionParameters: encryptionParameters, appEncryption: appEncryption, displayUpgradeProgress: displayUpgrade)
