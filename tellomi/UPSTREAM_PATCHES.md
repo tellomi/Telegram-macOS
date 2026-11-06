@@ -29,6 +29,6 @@
 | `.github/workflows/tellomi-dc-gate.yml` | 再跑配置自检，并把补丁套到上游 pin `fb0e62ba` 的临时副本上。不出包，不上传。 |
 
 | `tellomi/PROTOCOL.md` | 记录一次临时握手。脚本不入库，不进客户端构建，不发码。 |
-| `.github/workflows/tellomi-xcodebuild.yml` | 只编译。`xcodebuild` 使用 `CODE_SIGNING_ALLOWED=NO`，不上传产物。包解析之前按上游脚本生成被忽略的 `wallet_engineFFI.xcframework`、`MTProtoEngineFFI.xcframework`，以及 `FlatSerialization/Sources`。否则 SwiftPM 会在空的本地二进制目标或缺失的 `Sources` 路径上失败。 |
+| `.github/workflows/tellomi-xcodebuild.yml` | 只编译。`xcodebuild` 使用 `CODE_SIGNING_ALLOWED=NO`，不上传产物。包解析之前按上游脚本生成被忽略的 `wallet_engineFFI.xcframework`、`MTProtoEngineFFI.xcframework` 和 `FlatSerialization/Sources`。Sparkle 的 `ed25519` 是嵌套子模块，浅克隆根子模块时不会带上，编译前单独初始化，否则 `sha512.h` 等头文件不存在。 |
 
 没有改发现或 AI。没有登录或收发，所以还不能说聊天已经接通。公钥和 api hash 不写进说明文字。

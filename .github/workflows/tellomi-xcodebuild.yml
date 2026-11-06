@@ -14,7 +14,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Initialize submodules
-        run: git submodule update --init --depth 1
+        run: |
+          git submodule update --init --depth 1
+          git -C submodules/Sparkle submodule update --init --depth 1 ed25519
       - name: Prepare sources
         run: |
           python3 tellomi/apply_mtproto.py
