@@ -4,7 +4,7 @@
 
 | 文件 | 原因 |
 | --- | --- |
-| `Telegram-Mac/app/TellomiConnection.swift` | 新文件。未配置地址或公钥时失败；配置了也不回退到 Telegram 生产。 |
+| `Telegram-Mac/app/TellomiConnection.swift` | 新文件。禁网 stub：缺配置就失败；配置文件在也不送进 MTProto，不回退 Telegram 生产。不是已完成的连接。 |
 | `Telegram.xcodeproj/project.pbxproj` | 把上面的文件编进主目标和分享扩展。 |
 | `Telegram-Mac/app/AppDelegate.swift` | `TELLOMI_BUILD` 时，在 `NetworkInitializationArguments` 之前调用守卫。 |
 | `TelegramShare/ShareViewController.swift` | 分享扩展同样在连网之前调用守卫。 |

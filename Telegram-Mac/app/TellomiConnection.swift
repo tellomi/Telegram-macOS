@@ -6,13 +6,13 @@ enum TellomiConnection {
         let dc = env["TELLOMI_DC_CONFIG"] ?? ""
         let key = env["TELLOMI_SERVER_PUBLIC_KEY"] ?? ""
         if dc.isEmpty || key.isEmpty {
-            fatalError("Tellomi: set TELLOMI_DC_CONFIG and TELLOMI_SERVER_PUBLIC_KEY to existing files. This build does not use Telegram production datacenters or keys.")
+            fatalError("Tellomi: MTProto is not implemented. TELLOMI_DC_CONFIG and TELLOMI_SERVER_PUBLIC_KEY are unset, so this process stops before opening a connection and does not use Telegram production datacenters.")
         }
         let dcExists = FileManager.default.fileExists(atPath: dc)
         let keyExists = FileManager.default.fileExists(atPath: key)
         if !dcExists || !keyExists {
-            fatalError("Tellomi: DC config or server public key file is missing. Refusing Telegram production defaults.")
+            fatalError("Tellomi: MTProto is not implemented. The DC config or server public key path does not exist, so this process stops before opening a connection.")
         }
-        fatalError("Tellomi: connection files are present, but this build does not apply them to MTProto yet and will not fall back to Telegram production.")
+        fatalError("Tellomi: MTProto wiring is not implemented. The DC config and server public key files exist but are not read into the network stack. This process does not fall back to Telegram production.")
     }
 }

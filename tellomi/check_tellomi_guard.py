@@ -12,6 +12,8 @@ MAC = ROOT / "clients" / "macos"
 TEL = MAC / "tellomi"
 UPSTREAM = "561169337e838c3281f7cfe24652757a5b522df9"
 IOS_PIN = "fb0e62ba8a147f0821da6aa63c09da7d79a10111"
+LIBPRISMA = "31a5d6fbbef8136e4a2b3adaf7b95e2ccaa7436d"
+LIBPRISMA_NOT = "31a5d6fbbef8136e4a2e5f7a8ba665da32857a631"
 
 
 def main() -> int:
@@ -30,8 +32,10 @@ def main() -> int:
         problems.append("主程序或分享扩展没有在连网前调用守卫")
     if "TELLOMI_DC_CONFIG" not in guard or "TELLOMI_SERVER_PUBLIC_KEY" not in guard:
         problems.append("守卫没有同时要求地址和公钥")
-    if "will not fall back" not in guard:
-        problems.append("守卫在文件存在时仍可能继续走上游")
+    if "MTProto wiring is not implemented" not in guard:
+        problems.append("守卫没有写明 MTProto 尚未接入")
+    if LIBPRISMA not in upstream or LIBPRISMA_NOT in upstream:
+        problems.append("UPSTREAM.md 里的 libprisma SHA 不对")
     if "TELLOMI_BUILD" not in config:
         problems.append("api 凭证没有 Tellomi 分支")
     stable = (MAC / "configurations/Stable.xcconfig").read_text(encoding="utf-8")
@@ -52,6 +56,8 @@ def main() -> int:
         problems.append(f"gitlink 数量是 {len(links)}，期望 11")
     if not any(IOS_PIN in line and line.endswith("clients/macos/submodules/telegram-ios") for line in links):
         problems.append("telegram-ios gitlink 不对")
+    if not any(LIBPRISMA in line and line.endswith("clients/macos/submodules/libprisma") for line in links):
+        problems.append("libprisma gitlink 不是上游树里的那个提交")
     ios_files = subprocess.check_output(
         ["git", "-C", str(ROOT), "ls-files", "clients/macos/submodules/telegram-ios"],
         text=True,

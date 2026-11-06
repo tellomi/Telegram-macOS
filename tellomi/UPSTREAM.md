@@ -20,10 +20,14 @@ layer 不在 macOS 仓库根上，而在它钉住的上游 iOS 依赖里：`subm
 11 个依赖只钉在仓库根 `.gitmodules`，路径前缀 `clients/macos/`。内容不入库。`tg_owt` 和 `telegram-ios` 体积很大，按上游规则在要编译的机器上初始化，不整包放进总仓。
 
 ```bash
-git submodule update --init --depth 1 clients/macos/submodules/rlottie
+git submodule update --init --depth 1 clients/macos/submodules/libprisma
 ```
 
-`submodules/libprisma` 钉的是 `31a5d6fbbef8136e4a2e5f7a8ba665da32857a631`，URL 是 `https://github.com/desktop-app/libprisma`。2026-11-06 这个提交在该仓库不存在，GitHub 提交搜索也是 0。该仓库 master 是另一个提交 `94640c63c20eacdf70e37e23198d9ab53c802ebd`。没有改钉，避免用另一个提交假装兼容。Xcode 工程引用 `submodules/libprisma/libprisma/grammars.dat`（代码高亮）。聊天协议本身不在这个库里。
+`submodules/libprisma` 的 gitlink 是 `31a5d6fbbef8136e4a2b3adaf7b95e2ccaa7436d`（2026-09-29，「Fix highlight regressions.」）。`TelegramMessenger/telegram-macos` 从初始提交到 `56116933` 的树都是这个 SHA，URL 是 `https://github.com/desktop-app/libprisma`。2026-11-06 已执行上面的初始化，检出就是这个提交。同一对象也在 `https://github.com/TelegramMessenger/libprisma`（该仓库 `package.json` 写的地址）。没有改 pin。
+
+`desktop-app/libprisma` 的 master 是 `94640c63c20eacdf70e37e23198d9ab53c802ebd`，比这个 pin 超前 13 个提交，其中有「Update grammars」。换成 master 会换掉 `grammars.dat`，所以不用。
+
+CodeSyntax 真正编译的是 `libprisma/*.cpp` 和 `Syntaxer.mm`。`grammars.dat` 被主工程当作资源打进包。这些文件都在这个 pin 里。`isEqual.js` 只出现在 Xcode 导航里，不在 Compile Sources；这个 pin 和 master 都没有这个文件，不影响编译。重新生成语法表要用这一提交里的 `npm install && npm start`（`prismjs` 1.29.0），不要用别的提交生成后再声称还是这个 pin。
 
 要换上游：取 `TelegramMessenger/telegram-macos` 的新 master 提交，先读它钉的 `telegram-ios` 里 `currentLayer()`。只有这个数字仍等于 teamgram-server 当时的 layer，才更新源码和 gitlink。不要把根仓库改成 submodule。`clients/macos/tellomi/` 更新时保留。
 
