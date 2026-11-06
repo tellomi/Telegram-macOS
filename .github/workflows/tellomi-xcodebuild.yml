@@ -41,6 +41,7 @@ jobs:
             submodules/telegram-ios/submodules/MTProtoRustEngine
       - name: Build native libraries
         run: |
+          brew install cmake ninja meson nasm yasm autoconf libtool automake pkg-config
           git -C submodules/telegram-ios submodule update --init --depth 1 \
             third-party/td/td \
             third-party/dav1d/dav1d \
