@@ -29,5 +29,6 @@
 | `.github/workflows/tellomi-dc-gate.yml` | 再跑配置自检，并把补丁套到上游 pin `fb0e62ba` 的临时副本上。不出包，不上传。 |
 
 | `tellomi/PROTOCOL.md` | 记录一次临时握手。脚本不入库，不进客户端构建，不发码。 |
+| `.github/workflows/tellomi-xcodebuild.yml` | 只编译。`xcodebuild` 使用 `CODE_SIGNING_ALLOWED=NO`，不上传产物。包解析之前先按上游脚本生成被 gitignore 的 `wallet_engineFFI.xcframework` 和 `MTProtoEngineFFI.xcframework`，否则 SwiftPM 会因空的本地二进制目标失败。 |
 
 没有改发现或 AI。没有登录或收发，所以还不能说聊天已经接通。公钥和 api hash 不写进说明文字。
