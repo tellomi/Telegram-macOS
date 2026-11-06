@@ -65,7 +65,10 @@ do
         -configuration Release BUILD_LIBRARY_FOR_DISTRIBUTION=YES \
         -scheme "$FWNAME" \
         -derivedDataPath "$STAMP_CACHE/DerivedData-$LIB" \
-        -destination 'generic/platform=macOS'
+        -destination 'generic/platform=macOS' \
+        CODE_SIGNING_ALLOWED=NO \
+        CODE_SIGNING_REQUIRED=NO \
+        CODE_SIGN_IDENTITY=""
 
     if ! framework_outputs_present "$ROOT_DIR" "$LIB" || ! framework_outputs_consistent "$ROOT_DIR" "$LIB"; then
         echo "error: $LIB did not produce complete, consistent outputs" >&2

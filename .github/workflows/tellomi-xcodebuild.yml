@@ -39,6 +39,20 @@ jobs:
             submodules/telegram-ios/third-party/mtproto-engine \
             core-xprojects/mtproto-engine/build \
             submodules/telegram-ios/submodules/MTProtoRustEngine
+      - name: Build native libraries
+        run: |
+          git -C submodules/telegram-ios submodule update --init --depth 1 \
+            third-party/td/td \
+            third-party/dav1d/dav1d \
+            third-party/libvpx/libvpx
+          ABSL_ATTR="submodules/tg_owt/src/third_party/abseil-cpp/absl/base/attributes.h"
+          if [ -f "$ABSL_ATTR" ]; then
+            /usr/bin/sed -i '' \
+              -e 's|^#define ABSL_ATTRIBUTE_LIFETIME_BOUND \[\[clang::lifetimebound\]\]|#define ABSL_ATTRIBUTE_LIFETIME_BOUND|' \
+              -e 's|^#define ABSL_ATTRIBUTE_LIFETIME_BOUND __attribute__((lifetimebound))|#define ABSL_ATTRIBUTE_LIFETIME_BOUND|' \
+              "$ABSL_ATTR"
+          fi
+          CMAKE_POLICY_VERSION_MINIMUM=3.5 sh scripts/configure_frameworks.sh
       - name: Compile without signing
         run: |
           xcodebuild \
