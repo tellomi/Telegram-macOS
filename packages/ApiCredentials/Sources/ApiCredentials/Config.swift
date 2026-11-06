@@ -2,10 +2,10 @@ import Cocoa
 
 public final class ApiEnvironment {
     public static var apiId:Int32 {
-        fatalError("Tellomi: api_id is not configured. This package does not use Telegram credentials.")
+        return 100001
     }
     public static var apiHash:String {
-        fatalError("Tellomi: api_hash is not configured. This package does not use Telegram credentials.")
+        return "74656c6c6f6d69000000000000000000"
     }
     
     public static var bundleId: String {

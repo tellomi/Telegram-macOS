@@ -22,5 +22,10 @@
 | `tellomi/check_tellomi_guard.py` | 拒绝 plist 里的上游 Firebase 标识和非空密钥字段，以及 lab 脚本里的非空默认凭证。 |
 | `tellomi/ALIGNMENT.md`、`tellomi/prove_macos_tree.sh` | 记下相对总仓 `clients/macos` @ `59f5c5801885a90ad5ef7f180fd99ca786a80bc1` 的核对方法。本环境读不到 `tellomi/tellomi`，所以没有用总仓对象算出 `59f5c580:clients/macos` 或 `b5651a40:clients/macos`。后来出现的附注标签 `verified-59f5c580` 没有被当成这个计算结果，也没有 force 改写。 |
 | `tellomi/check_tellomi_guard.py`、`.github/workflows/tellomi-migration-gate.yml` | 迁移收口的测试门禁：守卫、导入树 OID、tip 上的凭证扫描，以及没有总仓时证明脚本必须退出 2。不构建安装包，不上传，不部署。 |
+| `tellomi/server/tellomi-server.json`、`tellomi/mtproto/TellomiServerConfig.h`、`tellomi/mtproto/TellomiServerConfig.m`、`tellomi/mtproto/TellomiServerConfigJSON.h` | 生产 MTProto 是 `8.137.39.82:10443`。这不是预发。DC 1 和 DC 2 是同一地址。`11443` 只作为待确认的预发端口写在说明里，不进种子。RSA 公钥是 iOS `Tellomi/tellomi-server.json` 里的两把 PKCS#1，顺序与安卓 `tellomi-server-public.pem` 相同，新的在前。JSON 是唯一一份。 |
+| `tellomi/apply_mtproto.py`、`scripts/prepare-telegram-api.py`、`Telegram.xcodeproj/xcshareddata/xcschemes/{Telegram,Release,TelegramShare}.xcscheme` | 构建前把上面的配置写进钉住的 `telegram-ios` 工作树：种子替换 `Network.swift` 里的 Telegram 地址并关掉备用发现，握手改用 Tellomi 公钥，并按 Teamgram 的小端指纹选钥。不改 gitlink。 |
+| `packages/ApiCredentials/Sources/ApiCredentials/Config.swift` | `api_id` / `api_hash` 与 iOS `build-system/appstore-configuration.json` 一致。安卓 gradle 里的占位凭证是另一对，这里不用。服务端 `CheckApiIdAndHash` 当前直接返回 nil。 |
+| `Telegram-Mac/app/AppDelegate.swift`、`TelegramShare/ShareViewController.swift`、`Telegram.xcodeproj/project.pbxproj` | 去掉连网前的 fatalError stub。没有这个 stub 之后，构建前套用的 DC 和 RSA 才会进到初始化。 |
+| `.github/workflows/tellomi-dc-gate.yml` | 再跑配置自检，并把补丁套到上游 pin `fb0e62ba` 的临时副本上。不出包，不上传。 |
 
-没有改发现、AI、邮箱登录。没有写入 DC、api hash 或 RSA。
+没有改发现、AI 或邮箱登录。没有登录或收发测试，所以还不能说聊天已经接通。公钥和 api hash 不写进说明文字。

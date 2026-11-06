@@ -3,6 +3,7 @@
 """结构检查：macOS 守卫还在，telegram-ios 没有被整包复制进来。不编译客户端。"""
 from __future__ import annotations
 
+import hashlib
 import os
 import re
 import subprocess
@@ -24,29 +25,35 @@ def main() -> int:
     scope = (TEL / "SCOPE.md").read_text(encoding="utf-8")
     app = (MAC / "Telegram-Mac/app/AppDelegate.swift").read_text(encoding="utf-8")
     share = (MAC / "TelegramShare/ShareViewController.swift").read_text(encoding="utf-8")
-    guard = (MAC / "Telegram-Mac/app/TellomiConnection.swift").read_text(encoding="utf-8")
     config = (MAC / "packages/ApiCredentials/Sources/ApiCredentials/Config.swift").read_text(encoding="utf-8")
     if UPSTREAM not in upstream or IOS_PIN not in upstream:
         problems.append("UPSTREAM.md 没有钉死 macOS 或 telegram-ios 提交")
     if "232" not in upstream:
         problems.append("UPSTREAM.md 没有写 layer 232")
-    def call_is_unconditional(source: str, label: str) -> None:
-        before = source.split("NetworkInitializationArguments(", 1)[0]
-        if "TellomiConnection.refuseTelegramDefaults()" not in before:
-            problems.append(f"{label} 在连网前没有调用守卫")
-        window = before[-180:]
-        if "#if TELLOMI_BUILD" in window:
-            problems.append(f"{label} 的守卫仍包在 TELLOMI_BUILD 里，缺宏时会绕过")
-    call_is_unconditional(app, "主程序")
-    call_is_unconditional(share, "分享扩展")
-    if "TELLOMI_DC_CONFIG" not in guard or "TELLOMI_SERVER_PUBLIC_KEY" not in guard:
-        problems.append("守卫没有同时要求地址和公钥")
-    if "MTProto wiring is not implemented" not in guard:
-        problems.append("守卫没有写明 MTProto 尚未接入")
+    if (MAC / "Telegram-Mac/app/TellomiConnection.swift").exists() or "refuseTelegramDefaults" in app or "refuseTelegramDefaults" in share:
+        problems.append("连网前的 fatalError stub 还在")
+    if "NetworkInitializationArguments(" not in app or "NetworkInitializationArguments(" not in share:
+        problems.append("主程序或分享扩展没有构造网络参数")
+    for scheme in (
+        "Telegram.xcodeproj/xcshareddata/xcschemes/Telegram.xcscheme",
+        "Telegram.xcodeproj/xcshareddata/xcschemes/Release.xcscheme",
+        "Telegram.xcodeproj/xcshareddata/xcschemes/TelegramShare.xcscheme",
+    ):
+        scheme_text = (MAC / scheme).read_text(encoding="utf-8")
+        if "tellomi/apply_mtproto.py" not in scheme_text:
+            problems.append(f"{scheme} 没有在构建前套用 MTProto 配置")
+    if "apply_mtproto.py" not in (MAC / "scripts/prepare-telegram-api.py").read_text(encoding="utf-8"):
+        problems.append("准备 TelegramApi 时没有套用 MTProto 配置")
     if LIBPRISMA not in upstream or LIBPRISMA_NOT in upstream:
         problems.append("UPSTREAM.md 里的 libprisma SHA 不对")
     if "TELLOMI_BUILD" in config or "return 9" in config or "3975f648bb682ee889f35483bc618d1c" in config:
         problems.append("ApiCredentials 仍依赖主目标宏或仍保留上游凭证")
+    if "return 100001" not in config:
+        problems.append("ApiCredentials 的 api id 不是 iOS 客户端的 100001")
+    api_hash_match = re.search(r'return "([0-9a-fA-F]{32})"', config)
+    api_hash_sha256 = "9ae9e384e471922ca7361e331eacb9d71c5a6c9513ae4d93182655d1d6492221"
+    if api_hash_match is None or hashlib.sha256(api_hash_match.group(1).encode()).hexdigest() != api_hash_sha256:
+        problems.append("ApiCredentials 的 api hash 与 iOS 客户端不一致")
     if 'return "app.tellomi.macos"' not in config:
         problems.append("ApiCredentials 的 bundle id 仍是上游")
     project = (MAC / "Telegram.xcodeproj/project.pbxproj").read_text(encoding="utf-8")
@@ -78,15 +85,8 @@ def main() -> int:
             problems.append(f"{rel} 仍有 Telegram 更新地址")
         if "SFEED_URL" in text and "SFEED_URL =" not in text:
             problems.append(f"{rel} 没有清空 SFEED_URL")
-    def guarded_call_is_weak(source: str) -> bool:
-        before = source.split("NetworkInitializationArguments(", 1)[0]
-        return (
-            "TellomiConnection.refuseTelegramDefaults()" not in before
-            or "#if TELLOMI_BUILD" in before[-180:]
-        )
-    bad = "\n#if TELLOMI_BUILD\nTellomiConnection.refuseTelegramDefaults()\n#endif\nNetworkInitializationArguments("
-    if not guarded_call_is_weak(bad):
-        problems.append("负向检查没能发现被宏包住的守卫")
+    if "fatalError(\"Tellomi: api_" in config:
+        problems.append("ApiCredentials 仍在配置处直接失败")
     restored = (MAC / "Telegram-Mac/Release.xcconfig").read_text(encoding="utf-8") + "\nSFEED_URL = https://osx.telegram.org/updates/versions.xml\n"
     if "osx.telegram.org" not in restored:
         problems.append("负向样例没有上游更新地址")
@@ -98,9 +98,23 @@ def main() -> int:
         if "__pycache__" in path.parts or path.suffix == ".pyc":
             continue
         text = path.read_text(encoding="utf-8")
-        for banned in ("149.154.", "8.137.39.82", "3975f648bb682ee889f35483bc618d1c"):
+        relative = str(path.relative_to(ROOT))
+        allowed_dev_address = {
+            "tellomi/server/tellomi-server.json",
+            "tellomi/mtproto/TellomiServerConfigJSON.h",
+            "tellomi/apply_mtproto.py",
+            "tellomi/UPSTREAM_PATCHES.md",
+            "tellomi/UPSTREAM.md",
+            "tellomi/SCOPE.md",
+            "tellomi/dc-config.example",
+        }
+        for banned in ("149.154.", "3975f648bb682ee889f35483bc618d1c"):
             if banned in text:
-                problems.append(f"{path.relative_to(ROOT)} 含有不该写入的配置")
+                problems.append(f"{relative} 含有不该写入的配置")
+        if "8.137.39.82" in text and relative not in allowed_dev_address:
+            problems.append(f"{relative} 把生产地址写进了配置以外的文件")
+        if "Chengdu dev" in text or "成都 dev" in text:
+            problems.append(f"{relative} 把生产端口写成了 dev")
     listed = subprocess.check_output(["git", "-C", str(ROOT), "ls-files", "-s"], text=True)
     links = [line for line in listed.splitlines() if line.startswith("160000 ")]
     if len(links) != 11:
@@ -144,6 +158,18 @@ def main() -> int:
         problems.append("tip 上还有上游凭证片段")
     elif credential_grep.returncode != 1:
         problems.append("凭证扫描没有正常结束")
+    configured = subprocess.run(
+        [sys.executable, str(TEL / "apply_mtproto.py"), "--self-test"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+    )
+    if configured.returncode != 0:
+        problems.append("MTProto 配置自检失败")
+        if configured.stderr:
+            sys.stderr.write(configured.stderr)
+    elif configured.stdout:
+        sys.stdout.write(configured.stdout)
     if not os.environ.get("TELLOMI_MONOREPO"):
         proved = subprocess.run(
             [str(TEL / "prove_macos_tree.sh")],

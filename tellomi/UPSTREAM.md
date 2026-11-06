@@ -31,6 +31,6 @@ CodeSyntax 真正编译的是 `libprisma/*.cpp` 和 `Syntaxer.mm`。`grammars.da
 
 要换上游：取 `TelegramMessenger/telegram-macos` 的新 master 提交，先读它钉的 `telegram-ios` 里 `currentLayer()`。只有这个数字仍等于 teamgram-server 当时的 layer，才更新源码和 gitlink。不要把根仓库改成 submodule。`tellomi/` 更新时保留。Windows 在独立仓库 `tellomi/Telegram-Windows`，两边的 libprisma pin 不要合成一个。
 
-连接配置：总仓 `AGENTS.md` 和 `docs/TELLOMI_RULES.md` 写了生产地址和端口。teamgram-server 里 `proto/mtproto/crypto/tools/public_key.pem` 是一份公钥；`tg_public_key.pem` 是 Telegram 的公钥，不能拿来当 Tellomi 的。没有一份已经核对过、可以写进客户端的「地址 + 这份公钥」组合，所以本轮不把地址或公钥写进源码。
+连接配置在 `tellomi/server/tellomi-server.json`。`8.137.39.82:10443` 是现有服务器的生产 MTProto TCP 端口。DC 1 和 DC 2 都是这个地址。不用主机名。预发端口据说是 `11443`，没有写进种子；要不要改连，待确认。`seeds.testing` 不是预发环境。RSA 公钥取 iOS 客户端的两把 PKCS#1，并与安卓 PEM 核对过；`teamgram-server` 的 `public_key.pem` 是其中较旧的一把，`tg_public_key.pem` 是 Telegram 的，不能单独拿来当 Tellomi 的。`tellomi/apply_mtproto.py` 在配置异常时拒绝套用。api 配置与 iOS 的 appstore 配置一致，不把 hash 写在这份说明里。
 
 总仓 `clients/macos` 的对齐基线、导入 tip 的树 OID，以及为什么没有改 `verified-b5651a40`，写在 `tellomi/ALIGNMENT.md`。核对命令是 `tellomi/prove_macos_tree.sh`。

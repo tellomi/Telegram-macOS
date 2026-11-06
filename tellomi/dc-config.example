@@ -1,4 +1,6 @@
-# dcId <ip> <port>
-# Point TELLOMI_DC_CONFIG at a file in this shape.
-# Point TELLOMI_SERVER_PUBLIC_KEY at the server RSA public key file.
-# Do not commit either file. This build still refuses to apply them.
+# The committed MTProto settings are tellomi/server/tellomi-server.json.
+# 8.137.39.82:10443 is the production MTProto TCP port, not staging.
+# Staging is stated as port 11443 and is not configured. Switching is unconfirmed.
+# The build copies the JSON into telegram-ios only after tellomi/apply_mtproto.py
+# accepts it. A hostname, an empty RSA key, a missing seed, or port 11443 is refused.
+
