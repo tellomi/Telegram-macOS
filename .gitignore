@@ -29,3 +29,8 @@ core-xprojects/tlottie/build
 .swiftpm/
 .ci-build-logs/
 *.profraw
+
+# Local TDLib lab credentials. Do not commit.
+tools/networklab/tdlib_lab.local.json
+__pycache__/
+*.pyc

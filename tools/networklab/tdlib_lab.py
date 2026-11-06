@@ -9,8 +9,40 @@ import tempfile
 import time
 
 TDJSON = os.environ.get("TDJSON", "libtdjson.dylib")
-API_ID = int(os.environ.get("TDLIB_API_ID", "94575"))
-API_HASH = os.environ.get("TDLIB_API_HASH", "a3406de8d171bb422bb6ddf3bbd800e2")
+
+
+def load_tdlib_api_credentials():
+    """Read api_id and api_hash from the environment or an untracked local file.
+
+    The repository ships no usable default. A missing value fails closed.
+    """
+    api_id = os.environ.get("TDLIB_API_ID", "").strip()
+    api_hash = os.environ.get("TDLIB_API_HASH", "").strip()
+    local_path = os.environ.get(
+        "TDLIB_CREDENTIALS_FILE",
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "tdlib_lab.local.json"),
+    )
+    if (not api_id or not api_hash) and os.path.isfile(local_path):
+        with open(local_path, encoding="utf-8") as handle:
+            data = json.load(handle)
+        if not isinstance(data, dict):
+            raise SystemExit("%s must be a JSON object with api_id and api_hash" % local_path)
+        if not api_id:
+            api_id = str(data.get("api_id", "")).strip()
+        if not api_hash:
+            api_hash = str(data.get("api_hash", "")).strip()
+    if not api_id or not api_hash:
+        raise SystemExit(
+            "TDLIB_API_ID and TDLIB_API_HASH are required. "
+            "Export both, or put api_id and api_hash in an untracked "
+            "tools/networklab/tdlib_lab.local.json (see tdlib_lab.local.json.example). "
+            "This repository has no default api_id or api_hash."
+        )
+    try:
+        parsed_id = int(api_id)
+    except ValueError:
+        raise SystemExit("TDLIB_API_ID must be an integer")
+    return parsed_id, api_hash
 
 
 class Client:
@@ -82,6 +114,7 @@ class Client:
         return None
 
     def authorize(self, phone):
+        api_id, api_hash = load_tdlib_api_credentials()
         self.authorization = None
         self.send({"@type": "getAuthorizationState"})
         while True:
@@ -96,8 +129,8 @@ class Client:
                     "use_file_database": True,
                     "use_chat_info_database": True,
                     "use_message_database": True,
-                    "api_id": API_ID,
-                    "api_hash": API_HASH,
+                    "api_id": api_id,
+                    "api_hash": api_hash,
                     "system_language_code": "en",
                     "device_model": "NetworkLab",
                     "application_version": "1.0",
@@ -304,6 +337,7 @@ def scenario_catchup(client, options):
 
 
 def main():
+    load_tdlib_api_credentials()
     arguments = dict(zip(sys.argv[1::2], sys.argv[2::2]))
     phone = arguments["--phone"]
     label = arguments.get("--label", "tdlib")

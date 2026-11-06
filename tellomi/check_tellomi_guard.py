@@ -3,6 +3,7 @@
 """结构检查：macOS 守卫还在，telegram-ios 没有被整包复制进来。不编译客户端。"""
 from __future__ import annotations
 
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -114,6 +115,39 @@ def main() -> int:
         problems.append("telegram-ios 被整包放进来了")
     if "发现" not in scope or "邮箱" not in scope:
         problems.append("SCOPE.md 没有写发现和邮箱")
+
+    def plist_string(text: str, key: str) -> str | None:
+        marker = f"<key>{key}</key>"
+        start = text.find(marker)
+        if start < 0:
+            return None
+        match = re.search(r"<string>(.*?)</string>", text[start + len(marker):], re.S)
+        return match.group(1) if match else None
+
+    plist = (MAC / "Resources/config/GoogleService-Info.plist").read_text(encoding="utf-8")
+    for key in ("API_KEY", "GCM_SENDER_ID", "GOOGLE_APP_ID", "STORAGE_BUCKET"):
+        value = plist_string(plist, key)
+        if value is None:
+            problems.append(f"GoogleService-Info.plist 缺少 {key}")
+        elif value.strip():
+            problems.append(f"GoogleService-Info.plist 的 {key} 不是空占位")
+    if plist_string(plist, "BUNDLE_ID") != "app.tellomi.macos":
+        problems.append("GoogleService-Info.plist 的 bundle 不是 Tellomi 占位")
+    if plist_string(plist, "PROJECT_ID") != "tellomi-placeholder":
+        problems.append("GoogleService-Info.plist 的 PROJECT_ID 不是占位")
+    for token in ("AIza", "telegram-9c34c", "keepcoder"):
+        if token in plist:
+            problems.append(f"GoogleService-Info.plist 仍含上游标识 {token}")
+    lab = (MAC / "tools/networklab/tdlib_lab.py").read_text(encoding="utf-8")
+    if re.search(r'os\.environ\.get\(\s*"TDLIB_API_(?:ID|HASH)"\s*,\s*"[^"]+"\s*\)', lab):
+        problems.append("tdlib_lab.py 给 api 凭证留了非空默认值")
+    if re.search(r"\b[0-9a-fA-F]{32}\b", lab):
+        problems.append("tdlib_lab.py 仍含 32 位十六进制凭证")
+    if "load_tdlib_api_credentials" not in lab or "tdlib_lab.local.json" not in lab:
+        problems.append("tdlib_lab.py 没有环境变量或本地未跟踪配置入口")
+    example = (MAC / "tools/networklab/tdlib_lab.local.json.example").read_text(encoding="utf-8")
+    if example.count('""') < 2 or re.search(r"\b[0-9a-fA-F]{32}\b", example):
+        problems.append("tdlib_lab.local.json.example 含有可用凭证")
     if problems:
         print("\n".join(problems), file=sys.stderr)
         return 1

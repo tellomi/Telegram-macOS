@@ -14,8 +14,12 @@
 | `configurations/*.xcconfig`、`Telegram-Mac/{Debug,Beta,Release}.xcconfig` | 更新地址和 AppCenter 配置清空。 |
 | `tellomi/check_tellomi_guard.py` | 独立仓库根不再是总仓。守卫从 `tellomi/` 的上一级找根，gitlink 路径不再带 `clients/macos` 前缀。 |
 | `tellomi/UPSTREAM.md`、`tellomi/NOTICE.md` | 路径改成独立仓库根，不再写 `clients/macos/`。 |
-
 | `tellomi/upstream-ci-disabled/gitlab-ci.yml` | 上游 GitLab CI 移出仓库根，避免自动部署。文件保留。 |
 | `README.md` | 用带来源说明的仓库 README 替换 GitHub 初始化的两行 README。上游正文留在下面。这是必要的文档替换，不是 force 覆盖 main。 |
+| `Resources/config/GoogleService-Info.plist` | 去掉上游 Google `API_KEY`、`GCM_SENDER_ID`、`GOOGLE_APP_ID`、Firebase 项目 `telegram-9c34c` 和冒充 `ru.keepcoder.Telegram` 的 `BUNDLE_ID`。敏感字段留空，`BUNDLE_ID` 为 `app.tellomi.macos`，`PROJECT_ID` 为 `tellomi-placeholder`。没有写入 Tellomi 生产密钥。`FirebaseApp.configure()` 仍是注释。 |
+| `tools/networklab/tdlib_lab.py` | `api_id` / `api_hash` 只从 `TDLIB_API_ID`、`TDLIB_API_HASH` 或未跟踪的 `tools/networklab/tdlib_lab.local.json` 读取。仓库内没有可用默认值。 |
+| `tools/networklab/tdlib_lab.local.json.example`、`.gitignore` | 示例只有空字段。真正的本地文件被忽略，不入库。 |
+| `tellomi/check_tellomi_guard.py` | 拒绝 plist 里的上游 Firebase 标识和非空密钥字段，以及 lab 脚本里的非空默认凭证。 |
+| `tellomi/ALIGNMENT.md`、`tellomi/prove_macos_tree.sh` | 记下相对总仓 `clients/macos` @ `59f5c5801885a90ad5ef7f180fd99ca786a80bc1` 的核对方法。本环境读不到 `tellomi/tellomi`，所以没有新建 `verified-59f5c580`。已推送的 `verified-b5651a40` 没有改写。 |
 
 没有改发现、AI、邮箱登录。没有写入 DC、api hash 或 RSA。
